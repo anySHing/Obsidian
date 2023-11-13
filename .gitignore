@@ -1,3 +1,5 @@
 .DS_Store
 .obsidian
 DAILYNOTE/
+node_modules/
+TEMPLATES/
