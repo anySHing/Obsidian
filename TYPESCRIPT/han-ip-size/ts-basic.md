@@ -4,11 +4,7 @@
 
 TS에서 자체적으로 제공하는 타입들을 말함.
 
-<figure>
-  <img src="./img/ts-hierarchy.png">
-  <figcaption>TS 타입 계층도</figcaption>
-</figure>
-
+![[ts-hierarchy.png]]
 ## 원시 타입
 
 *원시 타입(Primitive Type)*은 동시에 한 개의 값만 저장할 수 있는 타입을 말한다.
