@@ -1,0 +1,4 @@
+- Broadcast 범위를 생각해보자.
+- Broadcast 주소라는 매우 특별한 주소가 존재한다. (MAC, IP 모두 존재)
+- 논리적인 것인지 아니면 물리적인 것인지로 구분하는 것도 방법
+- 일단 MAN(Metropolitan Area Network)는 제외한다
