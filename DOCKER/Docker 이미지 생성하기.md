@@ -35,3 +35,80 @@ Docker가 리눅스 기반이기 때문에 이미지를 생성할 때 Bash(Bourn
 | printf | 지정한 형식대로 값을 출력한다.<br>파이프와 연동하여 명령(프로세스)에 값을 입력하는 효과를 낼 수 있다.<br><br>`$ printf 80\\nexampleuser\\ny \| example-config`<br>`Port: 80`<br>`User: exampleuser`<br>`Save Configuration (y/n): y`<br><br>예를 들어 `example-config`는 Port, User, Save Configuration을 사용자에게 입력받는다.<br>printf로 미리 값을 설정하여 파이프로 example-config에게 넘겨주면 사용자가 입력하지 않아도 자동으로 값이 입력된다. |
 | sed | 텍스트 파일에서 문자열을 변경한다.<br>hello.txt 파일의 내용 중에서 hello 라는 문자열을 찾아서 world 문자열로 바꾸려면 다음과 같이 실행한다.<br><br>`$ sed -i "s/hello/world/g" hello.txt`<br><br>`sed -i "s/<찾을 문자열>/<바꿀 문자열>/g <파일명>` 형식이다. |
 | # | 주석 |
+
+
+# Dockerfile 작성하기
+
+Dockerfile은 Docker 이미지 설정 파일이다. Dockerfile에 설정된 내용대로 이미지를 생성한다.
+
+먼저 example 디렉토리를 생성한 뒤에 example 디렉토리로 이동한다.
+
+```
+~$ mkdir example
+~$ cd example
+```
+
+다음 내용은 `Dockerfile`로 저장한다.
+
+> ./example/Dockerfile
+
+```
+FROM ubuntu:22.04
+
+RUN apt update
+RUN apt install -y nginx
+RUN echo "\ndatemon off;" .> /etc/nginx/nginx.conf
+RUN chown -R www-data:www-data /var/lib/nginx
+
+VOLUME ["/data", "/etc/nginx/site-enabled", "/var/log/ngingx"]
+
+WORKDIR /etc/nginx
+
+CMD "[nginx]"
+
+EXPOSE 80
+EXPOSE 443
+```
+
+우분투 22.04를 기반으로 nginx 서버를 설치한 Docker 이미지를 생성하는 예제이다.
+
+- FROM 어떤 이미지를 기반으로 할 지 설정한다.
+	- Docker 이미지는 기존에 만들어진 이미지를 기반으로 생성한다.
+	- <이미지 이름>:<태그> 형식
+- MAINTAINER: 메인테이너 정보
+- RUN: 셸 스크립트 혹은 명령을 실행한다.
+	- 이미지 생성 중에는 사용자 입력을 받을 수 없으므로 `apt intall` 명령에서 `-y` 옵션을 사용한다. (yum install)의 경우도 동일
+	- 나머지는 `nginx` 설정이다.
+- VOLUME: 호스트와 공유할 디렉토리 목록이다. `docker run` 명령에서 `-v` 옵션으로 설정할 수 있다.
+	- ex) `-v /root/data:/data`는 호스트의 `root/data` 디렉토리를 Docker 컨테이너의 `/data` 디렉토리 연결한다.
+- CMD: 컨테이너가 시작되었을 때 실행할 실행 파일 또는 셸 스크립트이다.
+- WORKDIR: CMD에서 설정한 실행 파일이 실행될 디렉토리
+- EXPOSE: 호스트와 연결할 포트 번호
+
+# build. 이미지 생성하기
+
+Dockerfile을 작성했으면 이미지를 생성한다.
+
+Dockerfile이 저장된 example 디렉토리에서 다음 명령을 실행한다.
+
+`docker build <옵션> <Dockerfile 경로>` 형식이다.
+
+```
+~/example $ sudo docker build --tag hello:0.1 .
+```
+
+`--tag` 옵션으로 이미지 이름과 태그를 설정할 수 있다.
+
+이미지 이름만 설정할 경우 태그는 **latest**로 자동 설정된다.
+
+잠시 기다리면 이미지 파일이 생성된다. 이미지 목록을 출력해보자
+
+![[스크린샷 2023-12-29 오후 7.33.35.png]]
+
+`hello:0.0.1` 이미지가 생성되었다. 이제 실행해보자.
+
+```
+$ sudo docker run --name hello-nginx -d -p 80:80 -v /Users:/data hello:0.0.1
+```
+
+그 뒤 `127.0.0.1` 또는 `localhost:80`으로 접속하면 Welcome to NginX! 텍스트가 보인다.
