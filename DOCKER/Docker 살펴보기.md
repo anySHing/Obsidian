@@ -48,4 +48,19 @@ $ sudo docker commit -a "Foo Bar <foo@bar.com>" -m "add hello.txt" hello-nginx h
 
 # diff. 컨테이너에서 변경된 파일 확인하기
 
-`docker diff`
+`docker diff` 명령은 컨테이너가 실행되면서 변경된 파일 목록을 출력한다.
+
+비교 기준은 컨테이너를 생성한 이미지 내용이다.
+
+`docker diff <컨테이너 이름 | 컨테이너 ID>` 형식
+
+![[스크린샷 2023-12-30 오후 10.00.45.png]]
+
+- `A`: 추가된 파일
+- `C`: 변경된 파일
+- `D`: 삭제된 파일
+
+# inspect. 세부 정보 확인하기
+
+`docker inspect` 명령은 이미지와 컨테이너의 세부 정보를 출력한다.
+
