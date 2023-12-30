@@ -64,3 +64,6 @@ $ sudo docker commit -a "Foo Bar <foo@bar.com>" -m "add hello.txt" hello-nginx h
 
 `docker inspect` 명령은 이미지와 컨테이너의 세부 정보를 출력한다.
 
+`docker inspect <이미지 이름 | 이미지 ID | 컨테이너 이름 | 컨테이너 ID>` 형식
+
+![[스크린샷 2023-12-30 오후 10.04.00.png]]
