@@ -120,4 +120,252 @@ CMD ["/tmp/hello"]
 
 1. `ubuntu:22.04` 이미지에 gcc를 설치한 뒤 `hello.c` 파일을 컴파일한다.
 2. `apline:3.16.2` 이미지를 기반으로 `hello` 실행 파일만 추가하여 이미지를 생성한다.
-	- `FROM ubuntu:22.04 AS builder`
+	- `FROM ubuntu:22.04 AS builder`: `ubuntu:22.04` 이미지를 builder로 약칭을 지정
+	- `COPY --from=builder /tmp/hello ./`: `COPY`로 파일을 복사할 때 `--from` 옵션을 지정하면 로컬이 아닌 해당 이미지에서 파일을 복사해온다. 여기서는 `--from=builder` 이므로 `FROM ubuntu:22.04 AS builder`의 builder에서 파일을 복사해온다. 즉, builder에 있는 **/tmp/hell**를 **./**로 복사한다.
+3. `docker build` 명령으로 이미지를 생성한다.
+	- `~/hello $ sudo docker build --tag hello:0.0.1 .`
+4. 이제 `alpine:3.16.2` 이미지를 이용해서 만든 `hello:0.0.1` 이미지를 컨테이너로 생성한다.
+	- `$ sudo docker run --rm hello:0.0.1`
+	- `Hello Docker`
+	- `Hello Docker`가 출력되면 실행 파일이 정상적으로 실행된 것
+	- 이렇게 두 번의 과정을 거치는 이유는 최종 이미지 파일을 경량화하기 위해서이다.
+	- 처음 `FROM ubuntu:22.04 AS builder` 에서는 apt로 gcc를 설치하기 때문에 이미지의 크기가 커진다. 그리고 실행에 필요없는 **hello.c** 소스 파일도 포함된다.
+	- 여기서는 다시 `FROM alpine:3.16.2`를 사용하여 `COPY --from=builder /tmp/hello ./`로 **hello** 실행 파일만 복사하므로 크기가 매우 작아짐
+
+이미지의 크기가 작아지면 이미지 저장 공간도 아낄 수 있고, push, pull 속도도 빨라진다.
+
+# MAINTAINER (Deprecated)
+
+이미지를 생성한 사람의 정보를 설정한다. 형식은 자유이며 보통 다음과 같이 이름과 이메일을 입력한다.
+
+`MAINTAINER <작성자 정보>` 형식이다. **생략 가능하다**
+
+```dockerfile
+MAINTAINER Hong, Gildong <Hong@gildong.com>
+```
+
+# RUN
+
+FROM에서 설정한 이미지 위에서 스크립트 혹은 명령을 실행한다. 여기서 RUN으로 실행한 결과가 새 이미지로 생성되고, 실행 내역은 이미지의 히스토리에 기록된다.
+
+> 셸(/bin/sh)로 명령 실행하기
+
+`RUN <명령>` 형식이며 셸 스크립트 구문을 사용할 수 있다. FROM으로 설정한 이미지에 포함된 **/bin/sh** 실행 파일을 사용하게 되며 **/bin/sh** 실행 파일이 없으면 사용할 수 없다.
+
+```dockerfile
+RUN apt install -y ngingx
+RUN echo "Hello Docker" > /tmp/hello
+RUN curl -sSL https://go.dev/dl/go1.19.2.src.tar.gz | tar -v -C /usr/local -xz
+RUN git clone https://github.com/docker/docker.git
+```
+
+> 셸 없이 바로 실행하기
+
+`RUN ["<실행 파일>", "<매개 변수1>", "<매개 변수2>"]` 형식이다.
+
+실행 파일과 매개 변수를 배열 형태로 설정한다.
+
+```dockerfile
+RUN ["apt", "install", "-y", "nginx"]
+RUN ["/user/local/bin/hello", "--help"]
+```
+
+FROM으로 설정한 이미지의 **/bin/sh** 실행 파일을 사용하지 않는 방식이다.
+
+셸 스크립트 문법이 인식되지 않으므로 셸 스크립트 문법과 관련된 문자를 그대로 실행 파일에 넘겨줄 수 있다.
+
+RUN으로 실행한 결과는 캐시되며 다음 빌드 때 재사용한다. 캐시된 결과를 사용하지 않으려면 `docker build` 명령에서 `--no-cahce` 옵션을 사용하면 된다.
+
+# CMD
+
+컨테이넉 시작되었을 때 스크립트 혹은 명령을 실행한다.
+
+즉 `docker run` 명령으로 컨테이너를 생성하거나, `docker start` 명령으로 정지된 컨테이너를 시작할 때 실행된다. 
+
+Dockerfile에서 한 번만 사용할 수 있다.
+
+> 셸(/bin/sh)로 명령 실행하기
+
+`CMD <명령>` 형식이며 셸 스크립트 구문을 사용할 수 있다.
+
+FROM으로 설정한 이미지에 포함된 **/bin/sh** 실행 파일을 사용하게 되며 **/bin/sh** 실행 파일이 없으면 사용할 수 없다.
+
+```dockerfile
+CMD touch /home/hello/hello.txt
+```
+
+> 셸 없이 바로 실행하기
+
+```dockerfile
+CMD ["redis-server"]
+```
+
+> 셸 없이 바로 실행할 때 매개 변수 설정하기
+
+`CMD ["<실행 파일>", "<매개 변수1>", "<매개 변수2>"]` 형식이다.
+
+실행 파일과 매개 변수를 배열 형태로 설정한다.
+
+```dockerfile
+CMD ["mysqld", "--datadir=/var/lib/mysql", "--user=mysql"]
+```
+
+FROM으로 설정한 이미지의 **/bin/sh** 실행 파일을 사용하지 않는 방식이다. 셸 스크립트 문법이 인식되지 않으므로 셸 스크립트 문법과 관련된 문자를 그대로 실행 파일에 넘겨줄 수 있다.
+
+> ENTRYPOINT를 사용하였을 때
+
+`CMD ["<매개 변수1>", "<매개 변수2>"]` 형식이다.
+
+ENTRYPOINT에 설정한 명령에 매개 변수를 전달하여 실행한다.
+
+```dockerfile
+ENTRYPOINT ["echo"]
+CMD ["hello"]
+```
+
+Dockerfile에 ENTRYPOINT가 있으면 CMD는 ENTRYPOINT에 매개 변수만 전달하는 역할을 한다. 그래서 CMD 독자적으로 파일을 실행할 수 없게 된다.
+
+다음과 같이 Dockerfile을 빌드하여 컨테이너를 생성하면 **hello**가 출력된다.
+
+```
+$ sudo docker build --tag example .
+$ sudo docker run example
+hello
+```
+
+# ENTRYPOINT
+
+컨테이너가 시작되었을 때 스크립트 혹은 명령을 실행한다.
+
+즉 `docker run` 명령으로 컨테이너를 생성하거나, `docker start` 명령으로 정지된 컨테이너를 시작할 때 실행된다. ENTRYPOINT는 Dockerfile에서 단 한번만 사용할 수 있다.
+
+> 셸(/bin/sh)로 명령 실행하기
+
+`ENTRYPOINT <명령>` 형식이며 셸 스크립트 구문을 사용할 수 있다.
+
+FROM으로 설정한 이미지에 포함된 **/bin/sh** 실행 파일을 사용하게 되며 **/bin/sh** 실행 파일이 없으면 사용할 수 없다.
+
+```dockerfile
+ENTRYPOINT touch /home/hello/hello.txt
+```
+
+> 셸 없이 바로 실행하기
+
+`ENTRYPOINT ["<실행 파일>", "<매개 변수1>", "<매개 변수2>"]` 형식이다.
+
+실행 파일과 매개 변수를 배열 형태로 설정한다.
+
+```dockerfile
+ENTRYPOINT ["/home/hello/hello.sh"]
+```
+
+```dockerfile
+ENTRYPOINT ["/home/hello/hello.sh", "--hello=1", "--world=2"]
+```
+
+`CMD`와 `ENTRYPOINT`는 컨테이너가 생성될 때 명령이 실행되는 것은 동일하지만 `docker run` 명령에서 동작 방식이 다르다.
+
+> CMD의 경우
+
+다음과 같이 Dockerfile에서 CMD로 `echo` 명령을 사용하여 **hello** 명령을 출력한다.
+
+```dockerfile
+FROM ubuntu:latest
+CMD ["echo", "hello"]
+```
+
+컨테이너를 생성할 때 `docker run <이미지> <실행할 파일>` 형식이다.
+
+이미지 다음에 실행할 파일을 설정할 수 있다. `docker run` 명령에서 실행할 파일을 설정하면 CMD는 무시된다.
+
+```
+$ sudo docker build --tag example .
+$ sudo docker run example echo world
+world
+```
+
+`CMD ["echo", "hello"]`는 무시되고 `docker run` 명령에서 설정한 `echo world`가 실행되어 `world`가 출력되었다. `docker run` 명령에서 설정한 `<실행할 파일>`과 Dockerfile의 CMD는 같은 기능이다.
+
+> ENTRYPOINT의 경우
+
+다음과 같이 Dockerfile에서 ENTRYPOINT로 `echo` 명령을 사용하여 `hello`를 출력한다.
+
+```dockerfile
+FROM ubuntu:latest
+ENTRYPOINT ["echo", "hello"]
+```
+
+Dockerfile을 빌드하여 `docker run` 명령으로 실행한다.
+
+`docker run` 명령에서 실행할 파일을 설정하면 ENTRYPOINT가 무시되지 않고, 실행할 파일 설정 자체를 매개 변수로 받아서 처리한다.
+
+```
+$ sudo docker build --tag example .
+$ sudo docker run example echo world
+hello echo world
+```
+
+`ENTRYPOINT ["echo", "hello"]`에서 `echo hello`가 실행되어 `hello`가 출력되고, `docker run` 명령에서 설정한 내용이 `ENTRYPOINT ["echo", "hello"]`의 매개 변수로 처리되어 `echo world`도 함께 출력된다.
+
+셸에서는 다음과 같이 표현할 수 있다.
+
+```
+$ echo hello echo world
+hello echo world
+```
+
+`echo` 명령이 아닌 다른 방식으로 실행해보자. 다음과 같이 `1 2 3 4`를 넘겨주면 그대로 `1 2 3 4`가 출력된다.
+
+```
+$ sudo docker run example 1 2 3 4
+hello 1 2 3 4
+```
+
+ENTRYPOINT는 `docker run` 명령에서 `--entrypoint` 옵션으로도 설정할 수 있다. `--entrypoint` 옵션으로 `cat`을 실행하고 **/etc/hostname** 파일의 내용을 출력해보자
+
+```
+$sudo docker run --entrypoint"cat" example /etc/hostname
+12yf1gy41f2g1veq
+```
+
+`--entrypoint` 옵션을 설정하면 Dockerfile에 설정한 ENTRYPOINT는 무시된다.
+
+# EXPOSE
+
+호스트와 연결할 포트 번호를 설정한다. `docker run` 명령의 `--expose` 옵션과 동일하다.
+
+`EXPOSE <포트 번호>` 형식이다.
+
+```dockerfile
+EXPOSE 80
+EXPOSE 443
+
+____________
+
+EXPOSE 80 443
+```
+
+EXPOSE 하나로 포트 번호를 두 개 이상 동시에 설정할 수도 있다.
+
+EXPOSE는 호스트와 연결만 할 뿐 외부에 노출은 되지 않는다.
+
+포트를 외부에 노출하려면 `docker run` 명령의 `-p`, `-P` 옵션을 사용해야 한다.
+
+# ENV
+
+환경 변수를 설정한다. ENV로 설정한 환경 변수는 RUN, CMD, ENTRYPOINT에 적용된다.
+
+`ENV <환경 변수> <값>` 형식이다. 환경 변수를 사용할 때는 `$`를 사용한다.
+
+```dockerfile
+ENV GOPATH /go
+ENV PATH /go/bin:$PATH
+```
+
+다음은 ENV에서 설정한 환경 변수를 CMD로 출력한다.
+
+```dockerfile
+ENV HELLO 1234
+CMD echo $HELLO
+```
+
