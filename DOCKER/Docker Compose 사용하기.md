@@ -184,5 +184,72 @@ mysql>
 
 ```
 USE db;
+Database changed
+
 CREATE TABLE Users (id VARHCAR(100) NOT NULL, password VARCHAR(100) NOT NULL, PRIMARY KEY(id));
+Quey OK, 0 rows affected (0.1 sec)
+
+mysql> exit;
+Bye
 ```
+
+이제 app.js 실행 부분을 추가해보자. app 컨테이너의 `docker run` 명령은 다음과 같은 모양이다.
+
+```
+$ sudo docker run -it --name app -p 8080:8080 -w /app -v ~/app:/app --network example-network \
+	-e MYSQL_HOST=mysql \
+	-e MYSQL_USER=root \
+	-e MYSQL_PASSWORD=examplepassword \
+	-e MYSQL_DB=db \
+	node:16-alpine sh -c "npm install && node app.js"
+```
+
+`docker-compose.yml` 파일을 열고 `services` 아래에 `app` 부분을 추가한다.
+
+```yml
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: examplepassword
+      MYSQL_DATABASE: db
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=$$MYSQL_ROOT_PASSWORD']
+      interval: 10s
+      timeout: 2s
+      retries: 100
+app:
+  images: node:16-alpine
+  command: sh -c "npm install && node app.js"
+  ports:
+    - 8080:8080
+  working_dir: /app
+  volumes:
+    - ./:/app
+  environment:
+    MYSQL_HOST: mysql
+    MYSQL_USER: root
+	MYSQL_PASSWORD: examplepassword
+	MYSQL_DB: db
+  depends_on:
+    mysql:
+      condition: service_healthy
+
+volumes:
+  mysql:data:
+```
+
+- `mysql`:
+	- `healthcheck`: mySQL 컨테이버가 생성되면서 mySQL 데이터베이스도 생성하는데 이 때 시간이 조금 걸린다. mySQL 데이터베이스가 생성되지 않은 상태로 app에서 SQL 쿼리를 실행하게 되면 에러가 발생한다. 따라서 10초 간격으로 `mssqladmin ping`을 실행하여 mySQL 데이터베이스가 생성되었는지 검사하고, mySQL 데이터베이스가 완전히 생성되었을 때 app 컨테이너를 생성하도록 한다.
+- `app`: 컨테이너 이름은 `app`으로 지정하였다.
+	- `image`: Nodejs를 사용하기 위해 `node:16-alpine`을 지정하였다.
+	- `command`: 컨테이너를 생성했을 때 실행할 명령(command)이다. `docker run` 명령에서 가장 마지막에 들어가는 부분을 여기에 넣는다.
+	- `ports`: 호스트와 연결할 포트를 지정한다. `docker run` 명령의 `-p` 옵션과 같다.
+	- `working_dir`: `command` 명령이 실행될 디렉토리이다. `docker run` 명령의 `-w` 옵션과 같다.
+	- `volumes`: 앞의 mySQL과는 달리 호스트의 현재 디렉토리 `./`를 `/app`에 연결한다.
+	- `environment`: `docker run` 명령에 지정했던 것과 같이 환경 변수를 나열한다.
+	- `depends_on`: 데이터베이스 컨테이너가 생성되지 않은 상태에서 app 컨테이너가 먼저 생성되면 안된다. 따라서 `depends_on`에 `mysql`을 설정하여 mysql 컨테이너가 생성된 뒤에 app 컨테이너가 생성되도록 한다. 특히, `condition`에 `service_healthy`를 지정해서 `healthcheck`가 정상 상태가 될 때 까지 기다린다.
