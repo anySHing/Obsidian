@@ -47,14 +47,7 @@ const identity<T> = (arg: T): T => {
 const result = identity<string>('hello');
 ```
 
-4. 타입 가드: TS는 런타임 시점에서 변수의 타입을 체크하는 기능을 제공한다. 이를 통해 코드에서 타입 안전성을 보장할 수 있다.
-```ts
-const isNumber = (value: any): value is number => {
-
-}
-```
-
-> 타입스크립트가 어떻게 자라스크립트로 컴파일해서 실행될 수 있는지 설명해보세요.
+> 타입스크립트가 어떻게 자바스크립트로 컴파일해서 실행될 수 있는지 설명해보세요.
 
 > Node.js란 무엇이며, 사용하는 이유는 어떻게 되나요?
 
