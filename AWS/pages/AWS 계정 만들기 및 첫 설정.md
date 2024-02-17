@@ -11,9 +11,9 @@
 - 루트 유저는 관리용으로만 이용: 계정 설정 변경, 빌링 등
 - AWS API 호출 불가(Access Key / Secret Access Key 부여 불가)
 
-> IAM User
+> IAM 유저
 
-- IAM(Identity and Access Management)을 통해 생성한 유저
+- [[IAM(Identity and Access Management)|IAM]]을 통해 생성한 유저
 - 만들 때 주어진 아이디로 로그인
 - 기본 권한 없음: 따로 권한을 부여해야 함
 	- ex) 관리자 IAM User, 개발자 IAM User, 디자이너 IAM User, 회계팀 IAM User, ...
@@ -27,5 +27,3 @@
 > AWS 환경을 처음 만들었을 때 기본적으로 제공되는 것들
 
 ![[스크린샷 2023-12-25 오후 3.53.50.png]]
-
-[[AWS 계정 만들기 실습]]

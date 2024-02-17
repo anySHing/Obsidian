@@ -1,0 +1,8 @@
+- AWS의 모든 리소스의 고유 아이디
+- 형식:
+	- "arn:\[partition]:\[service]:\[region]:\[account_id]:\[resource_type]/resource_name/(qualifier)"
+	- 예시:
+		- arn:aws:s3:::test_bucket/text.txt
+		- arn:aws:dynamodb:ap-northeast-2:1234567890:table/mytable
+		- arn:aws:dynamodb:ap-northeast-2:123456789012:table/*
+- 맨 끝에 와일드카드(\*)를 사용하여 다수의 리소스를 지정 가능
