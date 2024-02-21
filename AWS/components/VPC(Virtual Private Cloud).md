@@ -22,7 +22,7 @@ VPC는 퍼블릭 인터넷에서 접근이 불가능한 것이 원칙.
 
 > VPC의 사용 사례
 
-- [[EC2]], [[RDS]], [[Lambda]] 등의 AWS의 컴퓨팅 서비스 실행
+- [[EC2]], [[RDS(Relational Database Service)]], [[Lambda]] 등의 AWS의 컴퓨팅 서비스 실행
 - 다양한 서브넷 구성
 - 보안 설정(IP BLock, 인터넷에 노출되지 않는 EC2 등 구성)
 
