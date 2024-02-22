@@ -1,0 +1,11 @@
+- ALB가 라우팅할 대상의 집합
+- 구성
+	- 3+1가지 종류
+		- Instance
+		- IP(Private)
+		- Lambda
+		- ALB
+	- 프로토콜(HTTP, HTTPS, gRPC 등)
+	- 기타 설정
+		- 트래픽 분산 알고리즘, 고정 세션 등
+
